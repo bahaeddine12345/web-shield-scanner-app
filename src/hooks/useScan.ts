@@ -75,6 +75,7 @@ export const useScan = () => {
     setError(null);
     
     try {
+      // Correction de l'endpoint API ici: utilisation de /sites/analyser au lieu de api/sites/analyser
       const response = await axios.post(`${API_URL}/sites/analyser`, { url });
       
       toast.success('Scan démarré');

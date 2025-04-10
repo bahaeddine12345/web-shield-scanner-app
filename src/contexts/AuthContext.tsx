@@ -67,7 +67,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           nom: data.nom,
           email: data.email,
           role: data.role,
-          name: data.nom // Set name to match nom
+          name: data.nom // Set name property to match nom
         });
       } catch (error) {
         console.error('Authentication check failed:', error);
@@ -101,7 +101,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         nom: userData.nom,
         email: userData.email,
         role: userData.role,
-        name: userData.nom // Set name to match nom
+        name: userData.nom // Set name property to match nom
       });
       
       toast.success('Connexion réussie');
