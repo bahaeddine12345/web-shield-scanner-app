@@ -7,9 +7,9 @@ import axios from 'axios';
 // Define types for our auth context
 type User = {
   id: string;
-  name: string;
+  nom: string;
   email: string;
-  role: 'USER' | 'ADMIN';
+  role: 'ADMIN' | 'USER';
 };
 
 type AuthContextType = {
@@ -37,7 +37,7 @@ const AuthContext = createContext<AuthContextType>({
 export const useAuth = () => useContext(AuthContext);
 
 // API base URL
-const API_URL = 'http://localhost:4200/api';
+const API_URL = 'http://localhost:8081/api';
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
@@ -60,7 +60,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         
         // Fetch user data
         const { data } = await axios.get(`${API_URL}/auth/me`);
-        setUser(data);
+        setUser({
+          id: data.id,
+          nom: data.nom,
+          email: data.email,
+          role: data.role
+        });
       } catch (error) {
         console.error('Authentication check failed:', error);
         localStorage.removeItem('token');
@@ -77,7 +82,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     try {
       const { data } = await axios.post(`${API_URL}/auth/login`, {
         email,
-        password,
+        motDePasse: password,
       });
       
       // Save token to localStorage
@@ -86,9 +91,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       // Set default auth header for subsequent requests
       axios.defaults.headers.common['Authorization'] = `Bearer ${data.token}`;
       
-      // Fetch user data
-      const userResponse = await axios.get(`${API_URL}/auth/me`);
-      setUser(userResponse.data);
+      // Set user data from response
+      const userData = data.utilisateur;
+      setUser({
+        id: userData.id,
+        nom: userData.nom,
+        email: userData.email,
+        role: userData.role
+      });
       
       toast.success('Connexion réussie');
       navigate('/dashboard');
@@ -103,9 +113,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const register = async (name: string, email: string, password: string) => {
     try {
       await axios.post(`${API_URL}/auth/register`, {
-        name,
+        nom: name,
         email,
-        password,
+        motDePasse: password,
       });
       
       toast.success('Inscription réussie, veuillez vous connecter');

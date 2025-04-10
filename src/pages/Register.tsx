@@ -13,7 +13,7 @@ import { Shield, UserPlus } from 'lucide-react';
 
 // Form validation schema
 const registerSchema = z.object({
-  name: z.string().min(2, { message: "Le nom doit contenir au moins 2 caractères" }),
+  nom: z.string().min(2, { message: "Le nom doit contenir au moins 2 caractères" }),
   email: z.string().email({ message: "Adresse email invalide" }),
   password: z.string().min(6, { message: "Le mot de passe doit contenir au moins 6 caractères" }),
   confirmPassword: z.string()
@@ -25,12 +25,12 @@ const registerSchema = z.object({
 type RegisterFormValues = z.infer<typeof registerSchema>;
 
 const Register = () => {
-  const { register, isAuthenticated, isLoading } = useAuth();
+  const { register: registerUser, isAuthenticated, isLoading } = useAuth();
   
   const form = useForm<RegisterFormValues>({
     resolver: zodResolver(registerSchema),
     defaultValues: {
-      name: '',
+      nom: '',
       email: '',
       password: '',
       confirmPassword: '',
@@ -39,7 +39,7 @@ const Register = () => {
   
   const onSubmit = async (data: RegisterFormValues) => {
     try {
-      await register(data.name, data.email, data.password);
+      await registerUser(data.nom, data.email, data.password);
     } catch (error) {
       // Error is handled in the register function
     }
@@ -79,7 +79,7 @@ const Register = () => {
               <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
                 <FormField
                   control={form.control}
-                  name="name"
+                  name="nom"
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Nom</FormLabel>
