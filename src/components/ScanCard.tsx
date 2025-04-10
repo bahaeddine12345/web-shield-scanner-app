@@ -15,7 +15,7 @@ interface ScanCardProps {
 
 const ScanCard: React.FC<ScanCardProps> = ({ scan }) => {
   // Format the scan creation date
-  const formattedDate = format(new Date(scan.createdAt), "d MMMM yyyy 'à' HH:mm", { locale: fr });
+  const formattedDate = format(new Date(scan.dateSoumission), "d MMMM yyyy 'à' HH:mm", { locale: fr });
   
   return (
     <Card>
@@ -27,18 +27,18 @@ const ScanCard: React.FC<ScanCardProps> = ({ scan }) => {
               <Badge
                 variant="outline"
                 className={
-                  scan.status === 'COMPLETED'
+                  scan.statutAnalyse === 'TERMINE'
                     ? 'bg-success/10 text-success border-success/20'
-                    : scan.status === 'FAILED'
+                    : scan.statutAnalyse === 'ECHEC'
                     ? 'bg-danger/10 text-danger border-danger/20'
                     : 'bg-warning/10 text-warning border-warning/20'
                 }
               >
-                {scan.status === 'COMPLETED'
+                {scan.statutAnalyse === 'TERMINE'
                   ? 'Terminé'
-                  : scan.status === 'FAILED'
+                  : scan.statutAnalyse === 'ECHEC'
                   ? 'Échoué'
-                  : scan.status === 'IN_PROGRESS'
+                  : scan.statutAnalyse === 'EN_COURS'
                   ? 'En cours'
                   : 'En attente'}
               </Badge>
@@ -46,7 +46,7 @@ const ScanCard: React.FC<ScanCardProps> = ({ scan }) => {
             
             <p className="text-sm text-muted-foreground">Créé le {formattedDate}</p>
             
-            {scan.status === 'IN_PROGRESS' && (
+            {scan.statutAnalyse === 'EN_COURS' && (
               <div className="flex items-center gap-2 mt-2">
                 <div className="w-36 h-2 bg-secondary rounded-full overflow-hidden">
                   <div 
@@ -58,7 +58,7 @@ const ScanCard: React.FC<ScanCardProps> = ({ scan }) => {
               </div>
             )}
             
-            {scan.status === 'COMPLETED' && scan.vulnerabilitiesCount && (
+            {scan.statutAnalyse === 'TERMINE' && scan.vulnerabilitiesCount && (
               <div className="flex flex-wrap gap-2 mt-2">
                 <Badge variant="secondary" className="bg-danger/10 text-danger border-danger/20">
                   {scan.vulnerabilitiesCount.high || 0} critique
@@ -84,13 +84,13 @@ const ScanCard: React.FC<ScanCardProps> = ({ scan }) => {
               </Button>
             </a>
             
-            {scan.status === 'IN_PROGRESS' ? (
+            {scan.statutAnalyse === 'EN_COURS' ? (
               <Link to={`/scan/${scan.id}`}>
                 <Button size="sm">
                   Voir progression
                 </Button>
               </Link>
-            ) : scan.status === 'COMPLETED' ? (
+            ) : scan.statutAnalyse === 'TERMINE' ? (
               <Link to={`/report/${scan.id}`}>
                 <Button size="sm">
                   <FileText className="h-4 w-4 mr-1" />

@@ -10,6 +10,10 @@ type User = {
   nom: string;
   email: string;
   role: 'ADMIN' | 'USER';
+  // Adding this getter for compatibility with existing components
+  get name(): string {
+    return this.nom;
+  }
 };
 
 type AuthContextType = {
@@ -97,7 +101,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         id: userData.id,
         nom: userData.nom,
         email: userData.email,
-        role: userData.role
+        role: userData.role,
+        get name() { return this.nom; }
       });
       
       toast.success('Connexion réussie');

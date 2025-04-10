@@ -21,13 +21,13 @@ const Dashboard = () => {
   });
   
   // Organize scans by status
-  const pendingScans = scans?.filter(scan => scan.status === 'PENDING' || scan.status === 'IN_PROGRESS') || [];
-  const completedScans = scans?.filter(scan => scan.status === 'COMPLETED') || [];
-  const failedScans = scans?.filter(scan => scan.status === 'FAILED') || [];
+  const pendingScans = scans?.filter(scan => scan.statutAnalyse === 'EN_ATTENTE' || scan.statutAnalyse === 'EN_COURS') || [];
+  const completedScans = scans?.filter(scan => scan.statutAnalyse === 'TERMINE') || [];
+  const failedScans = scans?.filter(scan => scan.statutAnalyse === 'ECHEC') || [];
   
   // Get latest scan for summary card
   const latestScan = scans?.sort((a, b) => 
-    new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+    new Date(b.dateSoumission).getTime() - new Date(a.dateSoumission).getTime()
   )[0];
   
   return (
@@ -111,7 +111,7 @@ const Dashboard = () => {
               <CardHeader>
                 <CardTitle>Dernier scan</CardTitle>
                 <CardDescription>
-                  {format(new Date(latestScan.createdAt), "dd/MM/yyyy à HH:mm")}
+                  {format(new Date(latestScan.dateSoumission), "dd/MM/yyyy à HH:mm")}
                 </CardDescription>
               </CardHeader>
               <CardContent>
@@ -122,23 +122,23 @@ const Dashboard = () => {
                       <Badge
                         variant="outline"
                         className={
-                          latestScan.status === 'COMPLETED'
+                          latestScan.statutAnalyse === 'TERMINE'
                             ? 'bg-success/10 text-success border-success/20'
-                            : latestScan.status === 'FAILED'
+                            : latestScan.statutAnalyse === 'ECHEC'
                             ? 'bg-danger/10 text-danger border-danger/20'
                             : 'bg-warning/10 text-warning border-warning/20'
                         }
                       >
-                        {latestScan.status === 'COMPLETED'
+                        {latestScan.statutAnalyse === 'TERMINE'
                           ? 'Terminé'
-                          : latestScan.status === 'FAILED'
+                          : latestScan.statutAnalyse === 'ECHEC'
                           ? 'Échoué'
-                          : latestScan.status === 'IN_PROGRESS'
+                          : latestScan.statutAnalyse === 'EN_COURS'
                           ? 'En cours'
                           : 'En attente'}
                       </Badge>
                       
-                      {latestScan.status === 'IN_PROGRESS' && (
+                      {latestScan.statutAnalyse === 'EN_COURS' && (
                         <div className="flex items-center space-x-2 text-xs text-muted-foreground">
                           <div className="w-16 h-2 bg-secondary rounded-full overflow-hidden">
                             <div 
@@ -151,7 +151,7 @@ const Dashboard = () => {
                       )}
                     </div>
                     
-                    {latestScan.status === 'COMPLETED' && latestScan.vulnerabilitiesCount && (
+                    {latestScan.statutAnalyse === 'TERMINE' && latestScan.vulnerabilitiesCount && (
                       <div className="mt-4">
                         <p className="text-sm font-medium mb-2">Vulnérabilités détectées:</p>
                         <div className="flex flex-wrap gap-2">
@@ -172,7 +172,7 @@ const Dashboard = () => {
                     )}
                   </div>
                   
-                  {latestScan.status === 'COMPLETED' && (
+                  {latestScan.statutAnalyse === 'TERMINE' && (
                     <div className="self-end mt-4 md:mt-0">
                       <Link to={`/report/${latestScan.id}`}>
                         <Button variant="outline" className="flex items-center gap-2">

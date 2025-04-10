@@ -28,6 +28,19 @@ export interface Scan {
     low: number;
     info: number;
   };
+  // Adding these mappings for compatibility with existing components
+  get status(): 'PENDING' | 'IN_PROGRESS' | 'COMPLETED' | 'FAILED' {
+    switch(this.statutAnalyse) {
+      case 'EN_ATTENTE': return 'PENDING';
+      case 'EN_COURS': return 'IN_PROGRESS';
+      case 'TERMINE': return 'COMPLETED';
+      case 'ECHEC': return 'FAILED';
+      default: return 'PENDING';
+    }
+  }
+  get createdAt(): string {
+    return this.dateSoumission;
+  }
 }
 
 export interface Vulnerability {
@@ -36,6 +49,10 @@ export interface Vulnerability {
   description: string;
   niveauGravite: string;
   categorie: string;
+  // Adding this getter for compatibility with existing components
+  get severity(): string {
+    return this.niveauGravite;
+  }
 }
 
 export interface ScanResult {
@@ -44,8 +61,11 @@ export interface ScanResult {
   reportHtml?: string;
   vulnerabilities: Vulnerability[];
   scanDate: string;
-  severity?: string;
   progress: number;
+  // Adding this getter for compatibility with existing components
+  get severity(): string | undefined {
+    return this.severity;
+  }
 }
 
 export const useScan = () => {
@@ -125,12 +145,10 @@ export const useScan = () => {
       
       return {
         id: dataResponse.data.id || scanId,
-        scanId: scanId,
         targetUrl: dataResponse.data.scanResult?.targetUrl || "",
         reportHtml: htmlResponse.data,
         vulnerabilities: dataResponse.data.vulnerabilities || [],
         scanDate: dataResponse.data.dateGeneration || new Date().toISOString(),
-        severity: dataResponse.data.niveauGravite || "",
         progress: 100
       };
     } catch (err: any) {

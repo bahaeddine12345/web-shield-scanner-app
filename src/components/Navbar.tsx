@@ -25,7 +25,7 @@ const Navbar = () => {
             {isAuthenticated ? (
               <div className="flex items-center gap-4">
                 <span className="text-sm text-muted-foreground hidden md:block">
-                  Bonjour, {user?.name}
+                  Bonjour, {user?.nom}
                 </span>
                 <Button 
                   variant="outline" 

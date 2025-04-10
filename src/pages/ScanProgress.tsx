@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
@@ -18,60 +17,51 @@ const ScanProgress = () => {
   const [scanData, setScanData] = useState<Scan | null>(null);
   const [currentStep, setCurrentStep] = useState<number>(1);
   
-  // Fetch initial scan data
   const { data: initialScan, isLoading, error } = useQuery({
     queryKey: ['scan', id],
     queryFn: () => getScan(id!),
     enabled: !!id,
   });
   
-  // Set up WebSocket connection for real-time updates
   const { isConnected } = useWebSocket({
     url: `ws://localhost:4200/ws/scan/${id}`,
     onMessage: (data) => {
       if (data.scanId === id) {
-        // Update local state with WebSocket data
         setScanData(prevData => ({
           ...prevData,
           ...data,
         }));
         
-        // Update step based on progress
         if (data.progress < 25) setCurrentStep(1);
         else if (data.progress < 50) setCurrentStep(2);
         else if (data.progress < 75) setCurrentStep(3);
         else if (data.progress < 100) setCurrentStep(4);
         
-        // Redirect to report when completed
         if (data.status === 'COMPLETED') {
           setTimeout(() => {
             navigate(`/report/${id}`);
-          }, 2000); // Short delay to show completion
+          }, 2000);
         }
       }
     },
   });
   
-  // Initialize scan data from query result
   useEffect(() => {
     if (initialScan) {
       setScanData(initialScan);
       
-      // Set current step based on progress
       const progress = initialScan.progress || 0;
       if (progress < 25) setCurrentStep(1);
       else if (progress < 50) setCurrentStep(2);
       else if (progress < 75) setCurrentStep(3);
       else if (progress < 100) setCurrentStep(4);
       
-      // Redirect to report if already completed
       if (initialScan.status === 'COMPLETED') {
         navigate(`/report/${id}`);
       }
     }
   }, [initialScan, id, navigate]);
   
-  // Generate message based on current step
   const getStepMessage = () => {
     switch (currentStep) {
       case 1:
@@ -87,20 +77,19 @@ const ScanProgress = () => {
     }
   };
   
-  // Get status badge style and text
-  const getStatusBadge = (status: ScanStatus) => {
-    switch (status) {
-      case 'COMPLETED':
+  const getStatusBadge = (statusAnalyse: ScanStatus) => {
+    switch (statusAnalyse) {
+      case 'TERMINE':
         return {
           className: 'bg-success/10 text-success border-success/20',
           text: 'Terminé'
         };
-      case 'FAILED':
+      case 'ECHEC':
         return {
           className: 'bg-danger/10 text-danger border-danger/20',
           text: 'Échoué'
         };
-      case 'IN_PROGRESS':
+      case 'EN_COURS':
         return {
           className: 'bg-warning/10 text-warning border-warning/20',
           text: 'En cours'
@@ -138,7 +127,7 @@ const ScanProgress = () => {
     );
   }
   
-  const statusBadge = getStatusBadge(scanData.status);
+  const statusBadge = getStatusBadge(scanData.statutAnalyse);
   
   return (
     <div className="max-w-3xl mx-auto">
@@ -169,7 +158,7 @@ const ScanProgress = () => {
         </CardHeader>
         
         <CardContent className="space-y-6">
-          {!isConnected && scanData.status === 'IN_PROGRESS' && (
+          {!isConnected && scanData.statutAnalyse === 'EN_COURS' && (
             <Alert className="bg-warning/10 text-warning border-warning/20">
               <AlertCircle className="h-4 w-4" />
               <AlertDescription>
@@ -216,7 +205,7 @@ const ScanProgress = () => {
             </div>
           </div>
           
-          {scanData.status === 'COMPLETED' && (
+          {scanData.statutAnalyse === 'TERMINE' && (
             <div className="flex justify-center mt-6">
               <div className="flex items-center text-success gap-2">
                 <CheckCircle className="h-5 w-5" />
@@ -225,7 +214,7 @@ const ScanProgress = () => {
             </div>
           )}
           
-          {scanData.status === 'FAILED' && (
+          {scanData.statutAnalyse === 'ECHEC' && (
             <Alert variant="destructive">
               <AlertTriangle className="h-4 w-4" />
               <AlertTitle>Échec du scan</AlertTitle>
@@ -236,7 +225,7 @@ const ScanProgress = () => {
           )}
         </CardContent>
         
-        {scanData.status === 'COMPLETED' && (
+        {scanData.statutAnalyse === 'TERMINE' && (
           <CardFooter className="border-t pt-6">
             <Link to={`/report/${scanData.id}`} className="w-full">
               <Button className="w-full gap-2">
