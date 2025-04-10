@@ -26,17 +26,21 @@ export interface Scan {
   };
 }
 
+export interface Vulnerability {
+  id: string;
+  name: string;
+  description: string;
+  severity: SeverityLevel;
+  remediation: string;
+  categorie?: string;
+  niveauGravite?: string;
+}
+
 export interface ScanResult {
   id: string;
   scanId: string;
   reportHtml: string;
-  vulnerabilities: {
-    id: string;
-    name: string;
-    description: string;
-    severity: SeverityLevel;
-    remediation: string;
-  }[];
+  vulnerabilities: Vulnerability[];
 }
 
 export const useScan = () => {
@@ -53,7 +57,7 @@ export const useScan = () => {
       const response = await axios.post(`${API_URL}/sites/analyser`, { url });
       
       toast.success('Scan démarré');
-      return response.data.scanId;
+      return response.data.scanResultId;
     } catch (err: any) {
       const errorMessage = err.response?.data?.message || 'Erreur lors du lancement du scan';
       setError(errorMessage);
@@ -88,7 +92,7 @@ export const useScan = () => {
     setError(null);
     
     try {
-      const response = await axios.get(`${API_URL}/scan/user`);
+      const response = await axios.get(`${API_URL}/scan/user/scans`);
       return response.data;
     } catch (err: any) {
       const errorMessage = err.response?.data?.message || 'Erreur lors de la récupération des scans';
@@ -106,8 +110,20 @@ export const useScan = () => {
     setError(null);
     
     try {
-      const response = await axios.get(`${API_URL}/rapports/${scanId}`);
-      return response.data;
+      // First try to get the HTML report
+      const htmlResponse = await axios.get(`${API_URL}/scan/rapports/generer-html/${scanId}`, {
+        responseType: 'text'
+      });
+      
+      // Then get the vulnerabilities data
+      const dataResponse = await axios.get(`${API_URL}/rapports/${scanId}`);
+      
+      return {
+        id: dataResponse.data.id || scanId,
+        scanId: scanId,
+        reportHtml: htmlResponse.data,
+        vulnerabilities: dataResponse.data.vulnerabilities || []
+      };
     } catch (err: any) {
       const errorMessage = err.response?.data?.message || 'Erreur lors de la récupération du rapport';
       setError(errorMessage);
@@ -129,7 +145,7 @@ export const useScan = () => {
       const url = window.URL.createObjectURL(new Blob([response.data]));
       const link = document.createElement('a');
       link.href = url;
-      link.setAttribute('download', `scan-report-${scanId}.pdf`);
+      link.setAttribute('download', `rapport-scan-${scanId}.pdf`);
       
       // Append to html page
       document.body.appendChild(link);
@@ -145,6 +161,35 @@ export const useScan = () => {
     }
   };
   
+  // Get scan statistics
+  const getScanStats = async () => {
+    setIsLoading(true);
+    setError(null);
+    
+    try {
+      const response = await axios.get(`${API_URL}/scan/stats`);
+      return response.data;
+    } catch (err: any) {
+      const errorMessage = err.response?.data?.message || 'Erreur lors de la récupération des statistiques';
+      setError(errorMessage);
+      toast.error(errorMessage);
+      return null;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+  
+  // Get scan progress
+  const getScanProgress = async (scanId: string): Promise<number> => {
+    try {
+      const response = await axios.get(`${API_URL}/scan/progress/${scanId}`);
+      return response.data;
+    } catch (err) {
+      console.error('Erreur lors de la récupération de la progression', err);
+      return 0;
+    }
+  };
+  
   return {
     isLoading,
     error,
@@ -153,5 +198,7 @@ export const useScan = () => {
     getUserScans,
     getScanResult,
     downloadScanReport,
+    getScanStats,
+    getScanProgress,
   };
 };
