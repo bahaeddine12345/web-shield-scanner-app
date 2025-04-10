@@ -28,19 +28,9 @@ export interface Scan {
     low: number;
     info: number;
   };
-  // Adding these mappings for compatibility with existing components
-  get status(): 'PENDING' | 'IN_PROGRESS' | 'COMPLETED' | 'FAILED' {
-    switch(this.statutAnalyse) {
-      case 'EN_ATTENTE': return 'PENDING';
-      case 'EN_COURS': return 'IN_PROGRESS';
-      case 'TERMINE': return 'COMPLETED';
-      case 'ECHEC': return 'FAILED';
-      default: return 'PENDING';
-    }
-  }
-  get createdAt(): string {
-    return this.dateSoumission;
-  }
+  // Using regular properties instead of getters for compatibility
+  status: 'PENDING' | 'IN_PROGRESS' | 'COMPLETED' | 'FAILED';
+  createdAt: string;
 }
 
 export interface Vulnerability {
@@ -49,10 +39,8 @@ export interface Vulnerability {
   description: string;
   niveauGravite: string;
   categorie: string;
-  // Adding this getter for compatibility with existing components
-  get severity(): string {
-    return this.niveauGravite;
-  }
+  // Regular property for compatibility
+  severity: string;
 }
 
 export interface ScanResult {
@@ -62,16 +50,24 @@ export interface ScanResult {
   vulnerabilities: Vulnerability[];
   scanDate: string;
   progress: number;
-  // Adding this getter for compatibility with existing components
-  get severity(): string | undefined {
-    return this.severity;
-  }
+  severity?: string;
 }
 
 export const useScan = () => {
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
+  
+  // Map statut to status for compatibility
+  const mapStatus = (statutAnalyse: ScanStatus): 'PENDING' | 'IN_PROGRESS' | 'COMPLETED' | 'FAILED' => {
+    switch(statutAnalyse) {
+      case 'EN_ATTENTE': return 'PENDING';
+      case 'EN_COURS': return 'IN_PROGRESS';
+      case 'TERMINE': return 'COMPLETED';
+      case 'ECHEC': return 'FAILED';
+      default: return 'PENDING';
+    }
+  };
   
   // Start a new scan
   const startScan = async (url: string): Promise<string | null> => {
@@ -100,7 +96,14 @@ export const useScan = () => {
     
     try {
       const response = await axios.get(`${API_URL}/scan/${id}`);
-      return response.data;
+      const scanData = response.data;
+      
+      // Add compatibility fields
+      return {
+        ...scanData,
+        status: mapStatus(scanData.statutAnalyse),
+        createdAt: scanData.dateSoumission
+      };
     } catch (err: any) {
       const errorMessage = err.response?.data?.message || 'Erreur lors de la récupération du scan';
       setError(errorMessage);
@@ -118,7 +121,12 @@ export const useScan = () => {
     
     try {
       const response = await axios.get(`${API_URL}/scan/user/scans`);
-      return response.data;
+      // Add compatibility fields to each scan
+      return response.data.map((scan: any) => ({
+        ...scan,
+        status: mapStatus(scan.statutAnalyse),
+        createdAt: scan.dateSoumission
+      }));
     } catch (err: any) {
       const errorMessage = err.response?.data?.message || 'Erreur lors de la récupération des scans';
       setError(errorMessage);
@@ -143,13 +151,21 @@ export const useScan = () => {
       // Then get the vulnerabilities data
       const dataResponse = await axios.get(`${API_URL}/rapports/${scanId}`);
       
+      // Add severity to vulnerabilities
+      const vulnerabilities = dataResponse.data.vulnerabilities ? 
+        dataResponse.data.vulnerabilities.map((vuln: any) => ({
+          ...vuln,
+          severity: vuln.niveauGravite
+        })) : [];
+      
       return {
         id: dataResponse.data.id || scanId,
         targetUrl: dataResponse.data.scanResult?.targetUrl || "",
         reportHtml: htmlResponse.data,
-        vulnerabilities: dataResponse.data.vulnerabilities || [],
+        vulnerabilities: vulnerabilities,
         scanDate: dataResponse.data.dateGeneration || new Date().toISOString(),
-        progress: 100
+        progress: 100,
+        severity: dataResponse.data.niveauGravite
       };
     } catch (err: any) {
       const errorMessage = err.response?.data?.message || 'Erreur lors de la récupération du rapport';

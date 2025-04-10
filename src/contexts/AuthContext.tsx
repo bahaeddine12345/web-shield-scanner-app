@@ -10,10 +10,8 @@ type User = {
   nom: string;
   email: string;
   role: 'ADMIN' | 'USER';
-  // Adding this getter for compatibility with existing components
-  get name(): string {
-    return this.nom;
-  }
+  // Instead of using a getter, we'll use a regular property
+  name: string; // This will be set to match nom
 };
 
 type AuthContextType = {
@@ -68,7 +66,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           id: data.id,
           nom: data.nom,
           email: data.email,
-          role: data.role
+          role: data.role,
+          name: data.nom // Set name to match nom
         });
       } catch (error) {
         console.error('Authentication check failed:', error);
@@ -102,7 +101,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         nom: userData.nom,
         email: userData.email,
         role: userData.role,
-        get name() { return this.nom; }
+        name: userData.nom // Set name to match nom
       });
       
       toast.success('Connexion réussie');
